@@ -1,1 +1,32 @@
+name: Receive order payload
 
+on:
+  workflow_dispatch:
+    inputs:
+      payload:
+        description: 'JSON payload from n8n'
+        required: true
+        type: string
+
+jobs:
+  save:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Save payload to file
+        run: |
+          mkdir -p incoming
+          cat <<'EOF' > incoming/payload-${{ github.run_id }}.json
+          ${{ inputs.payload }}
+          EOF
+
+      - name: Commit payload
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add incoming/
+          git commit -m "Add payload ${{ github.run_id }}" || echo "Nothing to commit"
+          git push
